@@ -1,0 +1,4 @@
+{
+    "cloudDBurl": "mongodb+srv://Atul:Atul@tripaxychat.3qtfk.mongodb.net/ChatApp?retryWrites=true&w=majority",
+    "JWT_SECRET": "An apple a day!"
+}

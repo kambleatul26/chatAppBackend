@@ -3,12 +3,6 @@ const auth = require('./jwt');
 const Room = require('../models/Room');
 const User = require('../models/User');
 
-const express = require('express');
-const app = express();
-const http = require('http').createServer(app);
-const io = require('socket.io')(http);
-
-
 function findRoom(rooms, personId, myId){
     for (var i=0; i < rooms.length; i++) {
         if (rooms[i].members.includes(personId) && rooms[i].members.includes(myId)) {
@@ -22,6 +16,7 @@ router.get('/syncMessages', auth.verifyToken, async (req, res) => {
     let users = await User.find();
     let rooms = await Room.find({ "members": { "$all": [req._id]} });
     
+    console.log(rooms);
     let usersToReturn = [];
     users.forEach(u => {
         let tmp = {};
@@ -40,9 +35,7 @@ router.get('/syncMessages', auth.verifyToken, async (req, res) => {
 
 
 router.post('/createRoom', auth.verifyToken, async (req, res) => {
-    const roomExists = await Room.find({ "members": { "$all": [req._id, req.body.receiverId]} });
-    console.log(roomExists)
-    console.log(roomExists.length)
+    const roomExists = await Room.findOne({ "members": { "$all": [req._id, req.body.receiverId]} });
     if(!roomExists || roomExists.length == 0) {
         const room = new Room({
             members: [req._id, req.body.receiverId],
@@ -52,49 +45,13 @@ router.post('/createRoom', auth.verifyToken, async (req, res) => {
         try {
             const savedRoom = await room.save();
             console.log(savedRoom);
-            res.status(200).send({message:'Success! Room created'})
+            res.status(200).json({message:'Success! Room created', roomId: savedRoom._id})
         } catch (error) {
             res.status(400).send({message:error})
         }
     } else {
-        res.status(200).send({message:'Room exists!'})
+        res.status(200).json({message:'Room exists!', roomId: roomExists._id})
     }
 });
-
-
-io.on('connection', (socket) => {
-    console.log('New Socket Connection!');
-  
-  //   io.use(middleWares.verifyToken());
-  
-    socket.on('startChat', createRoom);
-  
-    // DO THIS ON FRONT END
-  //   socket.join(roomId);
-  //   socket.on('chatMessage', () => {
-  //     console.log(Msg);
-  //   });
-  
-    socket.on('sendMessage', sendMessage)
-});
-
-
-/*
-    SEND MESSAGE FROM FRONTEND AS {message, roomId, sender, receiver}
-*/
-async function sendMessage(Msg) {
-    console.log(Msg);
-    io.to(Msg.sender).emit(Msg);
-
-    const messageObject = {
-        timeStamp: new Date(),
-        message: Msg.message,
-        sender: Msg.sender
-    }
-
-    await Room.updateOne({_id: roomId}, { $push: { chatTranscripts: messageObject }}, (err, any) => {
-        if(err) console.log(err);
-    });
-}
 
 module.exports = router;

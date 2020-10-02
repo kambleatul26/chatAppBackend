@@ -16,7 +16,7 @@ router.get('/syncMessages', auth.verifyToken, async (req, res) => {
     let users = await User.find();
     let rooms = await Room.find({ "members": { "$all": [req._id]} });
     
-    console.log(rooms);
+    // console.log(rooms);
     let usersToReturn = [];
     users.forEach(u => {
         let tmp = {};
@@ -44,7 +44,7 @@ router.post('/createRoom', auth.verifyToken, async (req, res) => {
 
         try {
             const savedRoom = await room.save();
-            console.log(savedRoom);
+            // console.log(savedRoom);
             res.status(200).json({message:'Success! Room created', roomId: savedRoom._id})
         } catch (error) {
             res.status(400).send({message:error})

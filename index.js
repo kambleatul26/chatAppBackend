@@ -44,8 +44,11 @@ app.get('/',(req,res) =>
 
 
 io.on('connection', (socket) => {
-    console.log('New Socket Connection!');  
-    socket.on('sendMessage', sendMessage)
+    // console.log('New Socket Connection!');  
+    socket.on('sendMessage', sendMessage);
+    socket.on('deleteMessage', deleteMessage);
+    socket.on('checkOnline', checkOnline);
+    socket.on('responseCheckOnline', responseCheckOnline);
 });
 
 
@@ -71,6 +74,40 @@ async function sendMessage(Msg) {
     // await Room.updateOne({_id: Msg.roomId}, { $push: { chatTranscripts: messageObject }}, (err, any) => {
     //     if(err) console.log(err);
     // });
+}
+
+async function deleteMessage(data) {
+    data = JSON.parse(data);
+    // console.log(data);
+
+    try {
+        await Room.updateOne({_id: data.roomId}, { $pull: { chatTranscripts: data.Msg }})
+        io.emit(data.receiver, JSON.stringify({
+            delete: true,
+            Msg: data.Msg
+        }));
+    } catch (error) {
+        console.log(error);
+    }
+    // await Room.updateOne({_id: Msg.roomId}, { $push: { chatTranscripts: messageObject }}, (err, any) => {
+    //     if(err) console.log(err);
+    // });
+}
+
+function responseCheckOnline(id) {
+    // console.log(id);
+    io.emit(id, JSON.stringify({
+        onlineStatusRes: true      
+    }))
+}
+
+function checkOnline(data) {
+    data = JSON.parse(data);
+    // console.log(data);
+    io.emit(data.receiver, JSON.stringify({
+        onlineStatusReq: true,
+        sender: data.sender
+    }));
 }
 
 

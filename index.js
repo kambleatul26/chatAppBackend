@@ -6,7 +6,7 @@ const authRoute = require('./routes/auth');
 const socketRoute = require('./routes/socket');
 const data = require("./data");
 
-const server = app.listen(3000, () => console.log('Server Running'));
+const server = app.listen(process.env.PORT || 3000, () => console.log('Server Running'));
 const io = require('socket.io').listen(server);
 // const http = require('http').createServer(app);
 // const io = require('socket.io')(http);
